@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package nginxadmin.v1;
+
+option go_package = "nginx-agent/internal/pb;pb";
+
+// AgentService 由 nginx-agent 实现，nginx-admin 作为客户端通过 gRPC over mTLS 调用。
+service AgentService {
+  // 健康与状态
+  rpc Ping(PingRequest) returns (PingReply);
+  rpc GetStatus(StatusRequest) returns (StatusReply);
+
+  // 配置发现与读写
+  rpc DiscoverConfigs(DiscoverRequest) returns (DiscoverReply);
+  rpc ListConfigs(ListConfigsRequest) returns (ListConfigsReply);
+  rpc ReadConfig(ReadConfigRequest) returns (ReadConfigReply);
+  rpc WriteConfig(WriteConfigRequest) returns (WriteConfigReply);
+
+  // 校验与重载
+  rpc TestConfig(TestConfigRequest) returns (TestConfigReply);
+  rpc Reload(ReloadRequest) returns (ReloadReply);
+
+  // 备份与回滚
+  rpc ListBackups(ListBackupsRequest) returns (ListBackupsReply);
+  rpc Rollback(RollbackRequest) returns (RollbackReply);
+}
+
+message PingRequest {}
+message PingReply {
+  string agent_version = 1;
+  int64 server_time_unix = 2;
+}
+
+message StatusRequest {}
+message StatusReply {
+  bool nginx_running = 1;
+  string nginx_version = 2;
+  int32 master_pid = 3;
+  string config_root = 4;
+  bool last_test_ok = 5;
+  string last_test_output = 6;
+}
+
+// 单个被发现的配置文件
+message ConfigFile {
+  string logical_path = 1; // 相对 config_root 的逻辑路径，如 conf.d/site.conf
+  int64 size = 2;
+  int64 mtime_unix = 3;
+  string checksum = 4; // sha256
+}
+
+message DiscoverRequest {}
+message DiscoverReply {
+  repeated ConfigFile files = 1;
+  // 发现到的 server_name 列表（粗粒度），便于 UI 按站点呈现
+  repeated string server_names = 2;
+}
+
+message ListConfigsRequest {}
+message ListConfigsReply {
+  repeated ConfigFile files = 1;
+}
+
+message ReadConfigRequest {
+  string logical_path = 1;
+}
+message ReadConfigReply {
+  bytes content = 1;
+  string checksum = 2;
+}
+
+message WriteConfigRequest {
+  string logical_path = 1; // 逻辑路径，由 Agent 映射到本地实际路径
+  bytes content = 2;       // 回写后的配置文本
+  string actor = 3;        // 操作人（用于本地快照备注）
+  bool auto_backup = 4;    // 写入前自动快照
+  // 乐观锁：若非空，仅当目标文件当前 checksum 等于该值时才写入
+  string expected_checksum = 5;
+}
+message WriteConfigReply {
+  bool ok = 1;
+  string backup_ref = 2;   // 本次写入前的快照引用
+  string new_checksum = 3;
+  string error = 4;
+}
+
+message TestConfigRequest {}
+message TestConfigReply {
+  bool ok = 1;
+  string output = 2; // nginx -t 原始输出
+}
+
+message ReloadRequest {}
+message ReloadReply {
+  bool ok = 1;
+  string output = 2;
+}
+
+message Backup {
+  string backup_ref = 1;
+  string logical_path = 2;
+  string checksum = 3;
+  int64 created_at_unix = 4;
+  string note = 5;
+}
+
+message ListBackupsRequest {
+  string logical_path = 1; // 可空，空则列全部
+}
+message ListBackupsReply {
+  repeated Backup backups = 1;
+}
+
+message RollbackRequest {
+  string backup_ref = 1;
+  string actor = 2;
+}
+message RollbackReply {
+  bool ok = 1;
+  string output = 2; // nginx -t 输出
+  string error = 3;
+}
