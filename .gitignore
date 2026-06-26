@@ -1,0 +1,23 @@
+# 编译产物
+/nginx-agent
+/bin/
+*.exe
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# 系统
+.DS_Store
+
+# 证书与私钥（切勿入库）
+*.pem
+*.key
+*.crt
+tls/
+
+# 本地数据与配置覆盖（保留示例 config.yaml）
+backups/
+config.local.yaml
+*.log

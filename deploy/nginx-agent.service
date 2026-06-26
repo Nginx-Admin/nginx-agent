@@ -1,0 +1,32 @@
+[Unit]
+Description=nginx-agent 节点代理
+Documentation=https://github.com/your-org/nginx-agent
+# 在 nginx 之后启动；nginx 未装时该依赖会被忽略
+After=network-online.target nginx.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/data/nginx-agent
+ExecStart=/data/nginx-agent/nginx-agent -config /data/nginx-agent/config.yaml
+
+# 崩溃自动重启
+Restart=on-failure
+RestartSec=3s
+
+# 优雅退出（main.go 监听 SIGTERM 做 grpcServer.GracefulStop）
+KillSignal=SIGTERM
+TimeoutStopSec=15s
+
+# 日志走 journald，用 journalctl -u nginx-agent 查看
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nginx-agent
+
+# 注意：Agent 需要读写 /etc/nginx 并执行 systemctl reload nginx，
+# 因此【不能】启用 ProtectSystem / ReadOnlyPaths 等会阻断写 /etc/nginx 的加固项。
+# 安全边界由 Agent 自身的 allowed_paths 白名单 + 命令黑名单负责。
+
+[Install]
+WantedBy=multi-user.target
