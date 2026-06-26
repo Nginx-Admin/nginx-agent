@@ -24,25 +24,30 @@ func New(cfg config.NginxConfig) *FsOps {
 	return &FsOps{cfg: cfg}
 }
 
-// resolve 把逻辑路径（相对 config_root）解析为绝对真实路径，并做安全校验。
+// resolve 把逻辑路径解析为绝对真实路径，并做安全校验。
+//
+// 逻辑路径以 config_root 为基准（相对路径），但允许通过 ".." 指向
+// config_root 之外的目录（例如 openresty 的 conf.d 常与 config_root 同级，
+// 逻辑路径为 "../conf.d/xxx.conf"）。真正的安全边界是 allowed_paths 白名单：
+// 无论怎么跳，最终绝对路径必须落在白名单内，否则拒绝。
 func (f *FsOps) resolve(logicalPath string) (string, error) {
 	if logicalPath == "" {
 		return "", fmt.Errorf("逻辑路径不能为空")
 	}
-	// 禁止绝对路径与上跳
 	clean := filepath.Clean(logicalPath)
+
+	var abs string
 	if filepath.IsAbs(clean) {
-		return "", fmt.Errorf("逻辑路径必须相对 config_root，不能是绝对路径: %s", logicalPath)
+		// 允许绝对逻辑路径（discover 解析 include 时可能产出），仍受白名单约束。
+		abs = clean
+	} else {
+		abs = filepath.Join(f.cfg.ConfigRoot, clean)
 	}
-	if clean == ".." || strings.HasPrefix(clean, ".."+string(os.PathSeparator)) {
-		return "", fmt.Errorf("逻辑路径越权（包含 ..）: %s", logicalPath)
-	}
-	abs := filepath.Join(f.cfg.ConfigRoot, clean)
 	abs, err := filepath.Abs(abs)
 	if err != nil {
 		return "", err
 	}
-	// 必须落在白名单目录内
+	// 唯一的硬安全边界：必须落在白名单目录内。
 	if !f.withinAllowed(abs) {
 		return "", fmt.Errorf("目标路径不在允许的白名单目录内: %s", abs)
 	}
