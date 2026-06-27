@@ -23,6 +23,10 @@ service AgentService {
   // 备份与回滚
   rpc ListBackups(ListBackupsRequest) returns (ListBackupsReply);
   rpc Rollback(RollbackRequest) returns (RollbackReply);
+
+  // Agent 本地设置（可由中心远程读写：快照保留份数、是否允许编辑主配置）
+  rpc GetAgentSettings(GetAgentSettingsRequest) returns (AgentSettingsReply);
+  rpc UpdateAgentSettings(UpdateAgentSettingsRequest) returns (AgentSettingsReply);
 }
 
 message PingRequest {}
@@ -119,4 +123,22 @@ message RollbackReply {
   bool ok = 1;
   string output = 2; // nginx -t 输出
   string error = 3;
+}
+
+message GetAgentSettingsRequest {}
+
+message UpdateAgentSettingsRequest {
+  // 快照保留份数（>0 时生效）
+  int32 backup_retain = 1;
+  // 是否允许编辑主配置（仅当 agent 本地总闸 allow_main_config_remote=true 时可被远程开启）
+  bool allow_main_config = 2;
+  // 操作人（审计用）
+  string actor = 3;
+}
+
+message AgentSettingsReply {
+  int32 backup_retain = 1;
+  bool allow_main_config = 2;
+  // 本地总闸是否允许远程修改主配置开关；false 时 allow_main_config 不可被远程置 true
+  bool allow_main_config_remote = 3;
 }

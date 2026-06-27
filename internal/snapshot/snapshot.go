@@ -21,6 +21,16 @@ type Snapshot struct {
 	fs  *fsops.FsOps
 }
 
+// SetRetain 动态调整快照保留份数（供中心远程设置）。
+func (s *Snapshot) SetRetain(n int) {
+	if n > 0 {
+		s.cfg.Retain = n
+	}
+}
+
+// Retain 返回当前保留份数。
+func (s *Snapshot) Retain() int { return s.cfg.Retain }
+
 func New(cfg config.BackupConfig, fs *fsops.FsOps) (*Snapshot, error) {
 	if cfg.Dir == "" {
 		return nil, fmt.Errorf("backup.dir 不能为空")

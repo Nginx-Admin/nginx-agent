@@ -4,7 +4,6 @@
 
 agent:
   listen: "0.0.0.0:7443"        # gRPC 监听地址，仅内网/防火墙放行
-  name: "web-01"                # 本节点显示名（上报中心）
   tls:
     enabled: false              # 开发期可关闭；生产务必开启 mTLS
     cert: /data/nginx-agent/tls/agent.crt
@@ -19,8 +18,16 @@ nginx:
   allowed_paths:                          # 路径白名单：只允许读写这些目录
     - /etc/nginx
   main_config_name: "nginx.conf"          # 主配置文件名（默认禁止改写）
-  allow_main_config: false                # 是否允许改写主配置（高危）
+  # 是否允许改写主配置（高危）。初始默认值；可在 Web 控制台「设置 → 编辑开关」远程修改，
+  # 但远程修改仅在下方 allow_main_config_remote 为 true 时才被接受。
+  allow_main_config: false
+  # 安全总闸：是否允许中心远程修改 allow_main_config。
+  # 默认 false——即使中心被攻破也无法远程放开本机主配置编辑。
+  # 仅当你明确信任中心、需要远程管控主配置开关时，才在本机改为 true 并重启 Agent。
+  allow_main_config_remote: false
 
 backup:
   dir: /data/nginx-agent/backups          # 本地备份目录
-  retain: 50                              # 本地保留最近 N 份快照
+  # 本地保留最近 N 份快照。初始默认值；实际运行值可在 Web 控制台「设置 → 编辑开关」
+  # 中按服务器修改（持久化到 agent-settings.json，启动时叠加）。
+  retain: 50

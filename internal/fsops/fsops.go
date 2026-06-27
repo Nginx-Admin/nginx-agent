@@ -24,6 +24,12 @@ func New(cfg config.NginxConfig) *FsOps {
 	return &FsOps{cfg: cfg}
 }
 
+// SetAllowMainConfig 动态设置是否允许改写主配置（供中心远程设置）。
+func (f *FsOps) SetAllowMainConfig(v bool) { f.cfg.AllowMainConfig = v }
+
+// AllowMainConfig 返回当前是否允许改写主配置。
+func (f *FsOps) AllowMainConfig() bool { return f.cfg.AllowMainConfig }
+
 // resolve 把逻辑路径解析为绝对真实路径，并做安全校验。
 //
 // 逻辑路径以 config_root 为基准（相对路径），但允许通过 ".." 指向

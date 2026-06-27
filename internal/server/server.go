@@ -33,13 +33,16 @@ func NewAgentServer(cfg config.Config) (*AgentServer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &AgentServer{
+	srv := &AgentServer{
 		cfg:  cfg,
 		fs:   fs,
 		nx:   nginxctl.New(cfg.Nginx),
 		snap: snap,
 		disc: discover.New(cfg.Nginx, fs),
-	}, nil
+	}
+	// 叠加本地 override（中心远程修改过的 retain / allow_main_config）
+	srv.loadOverride()
+	return srv, nil
 }
 
 func (s *AgentServer) Ping(_ context.Context, _ *pb.PingRequest) (*pb.PingReply, error) {
