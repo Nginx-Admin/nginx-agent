@@ -42,11 +42,8 @@ type NginxConfig struct {
 	AllowedPaths []string `yaml:"allowed_paths"`
 	// 主配置文件名（默认 nginx.conf），默认禁止改写，除非 AllowMainConfig=true。
 	MainConfigName string `yaml:"main_config_name"`
-	// 是否允许改写主配置（高危，默认 false）。可被中心远程修改（需 AllowMainConfigRemote=true）。
+	// 是否允许改写主配置（高危，默认 false）。本地配置，改后重启 Agent 生效。
 	AllowMainConfig bool `yaml:"allow_main_config"`
-	// 安全总闸：是否允许中心远程修改 AllowMainConfig。默认 false——
-	// 即使中心被攻破，也无法远程放开主配置编辑，除非本机显式打开此总闸。
-	AllowMainConfigRemote bool `yaml:"allow_main_config_remote"`
 }
 
 type BackupConfig struct {

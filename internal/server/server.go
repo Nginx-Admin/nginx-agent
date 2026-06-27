@@ -40,8 +40,6 @@ func NewAgentServer(cfg config.Config) (*AgentServer, error) {
 		snap: snap,
 		disc: discover.New(cfg.Nginx, fs),
 	}
-	// 叠加本地 override（中心远程修改过的 retain / allow_main_config）
-	srv.loadOverride()
 	return srv, nil
 }
 
