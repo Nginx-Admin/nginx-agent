@@ -42,18 +42,26 @@ nginx-agent/
 ├── api/proto/agent.proto         # gRPC 接口定义（与 nginx-admin 同步）
 ├── cmd/nginx-agent/main.go       # 程序入口（-config / -version）
 ├── internal/
-│   ├── config/                   # 配置加载（config.yaml）
+│   ├── agent/                    # gRPC AgentService 实现
+│   │   ├── service.go
+│   │   ├── settings.go
+│   │   ├── util.go
+│   │   └── version.go
+│   ├── transport/                # gRPC 传输层（mTLS）
+│   │   └── grpc.go
+│   ├── config/                   # 配置加载
 │   ├── pb/                       # protoc 生成代码
-│   ├── fsops/                    # 安全文件读写（路径白名单 + 乐观锁 + 原子写）
+│   ├── fsops/                    # 安全文件读写
 │   ├── nginxctl/                 # nginx -t / reload / 状态采集
-│   ├── snapshot/                 # 本地快照备份 + 保留份数裁剪
-│   ├── discover/                 # 配置发现（include 递归 + 常见目录兜底）
-│   └── server/                   # gRPC server，实现 AgentService
+│   ├── snapshot/                 # 本地快照备份
+│   └── discover/                 # 配置发现
+├── configs/
+│   └── config.example.yaml       # 配置示例（复制为 config.yaml 后修改）
 ├── deploy/
 │   ├── nginx-agent.service       # systemd 单元
 │   ├── install.sh                # 一键安装脚本
 │   └── README.md                 # 部署文档
-├── config.yaml                   # 配置示例
+├── config.yaml                   # 本地开发配置（可从 configs/ 复制）
 └── Makefile
 ```
 

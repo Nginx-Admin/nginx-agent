@@ -59,4 +59,4 @@ nginx:
 ```
 
 > 升级：重新编译二进制，重复步骤 2-3。`install.sh` 不会覆盖已存在的 `config.yaml`。  
-> 若中心使用 nginx-admin **v0.13.0+** 的「删除子配置」，Agent 需 **v0.5.0+**。
+> 配置示例见仓库 `configs/config.example.yaml`。若中心使用 nginx-admin **v0.13.0+** 的「删除子配置」，Agent 需 **v0.5.0+**。

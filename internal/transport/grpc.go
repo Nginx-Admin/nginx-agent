@@ -1,4 +1,4 @@
-package server
+package transport
 
 import (
 	"crypto/tls"
@@ -15,7 +15,7 @@ import (
 
 // ServerOption 根据配置返回 gRPC server 的传输凭证选项。
 // TLS 关闭时返回明文（仅限开发/内网受信环境）。
-func TransportOption(cfg config.TLSConfig) (grpc.ServerOption, error) {
+func ServerOption(cfg config.TLSConfig) (grpc.ServerOption, error) {
 	if !cfg.Enabled {
 		return grpc.Creds(insecure.NewCredentials()), nil
 	}

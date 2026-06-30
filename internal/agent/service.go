@@ -1,4 +1,4 @@
-package server
+package agent
 
 import (
 	"context"
@@ -12,9 +12,6 @@ import (
 	"nginx-agent/internal/pb"
 	"nginx-agent/internal/snapshot"
 )
-
-// Version 是 agent 版本号（构建时可注入）。
-var Version = "0.1.0-dev"
 
 // AgentServer 实现 pb.AgentServiceServer。
 type AgentServer struct {

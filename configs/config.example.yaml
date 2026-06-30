@@ -1,0 +1,26 @@
+# nginx-agent 本地配置示例
+# 部署时放在项目目录下，例如 /data/nginx-agent/config.yaml
+# 运行：/data/nginx-agent/nginx-agent -config /data/nginx-agent/config.yaml
+
+agent:
+  listen: "0.0.0.0:7443"        # gRPC 监听地址，仅内网/防火墙放行
+  tls:
+    enabled: false              # 开发期可关闭；生产务必开启 mTLS
+    cert: /data/nginx-agent/tls/agent.crt
+    key:  /data/nginx-agent/tls/agent.key
+    ca:   /data/nginx-agent/tls/ca.crt   # 用于校验中心
+
+nginx:
+  config_root: /etc/nginx                 # 本机 nginx 配置主目录
+  binary: /usr/sbin/nginx                 # nginx 二进制
+  test_cmd: "/usr/sbin/nginx -t"          # 语法检测命令
+  reload_cmd: "systemctl reload nginx"    # 本机 reload 方式（或 /usr/sbin/nginx -s reload）
+  allowed_paths:                          # 路径白名单：只允许读写这些目录
+    - /etc/nginx
+  main_config_name: "nginx.conf"          # 主配置文件名（默认禁止改写）
+  # 是否允许改写主配置（高危）。本地配置，改后重启 Agent 生效。
+  allow_main_config: false
+
+backup:
+  dir: /data/nginx-agent/backups          # 本地备份目录
+  retain: 50                              # 本地保留最近 N 份快照（本地配置，改后重启生效）

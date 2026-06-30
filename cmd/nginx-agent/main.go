@@ -10,9 +10,10 @@ import (
 
 	"google.golang.org/grpc"
 
+	"nginx-agent/internal/agent"
 	"nginx-agent/internal/config"
 	"nginx-agent/internal/pb"
-	"nginx-agent/internal/server"
+	"nginx-agent/internal/transport"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		log.Printf("nginx-agent %s", server.Version)
+		log.Printf("nginx-agent %s", agent.Version)
 		return
 	}
 
@@ -30,12 +31,12 @@ func main() {
 		log.Fatalf("加载配置失败: %v", err)
 	}
 
-	agentSrv, err := server.NewAgentServer(cfg)
+	agentSrv, err := agent.NewAgentServer(cfg)
 	if err != nil {
 		log.Fatalf("初始化 agent 失败: %v", err)
 	}
 
-	creds, err := server.TransportOption(cfg.Agent.TLS)
+	creds, err := transport.ServerOption(cfg.Agent.TLS)
 	if err != nil {
 		log.Fatalf("初始化传输凭证失败: %v", err)
 	}
@@ -62,7 +63,7 @@ func main() {
 		mode = "mTLS"
 	}
 	log.Printf("nginx-agent %s 启动: 监听 %s [%s], config_root=%s",
-		server.Version, cfg.Agent.Listen, mode, cfg.Nginx.ConfigRoot)
+		agent.Version, cfg.Agent.Listen, mode, cfg.Nginx.ConfigRoot)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("gRPC 服务退出: %v", err)
