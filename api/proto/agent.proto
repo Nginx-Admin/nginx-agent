@@ -15,6 +15,7 @@ service AgentService {
   rpc ListConfigs(ListConfigsRequest) returns (ListConfigsReply);
   rpc ReadConfig(ReadConfigRequest) returns (ReadConfigReply);
   rpc WriteConfig(WriteConfigRequest) returns (WriteConfigReply);
+  rpc DeleteConfig(DeleteConfigRequest) returns (DeleteConfigReply);
 
   // 校验与重载
   rpc TestConfig(TestConfigRequest) returns (TestConfigReply);
@@ -86,6 +87,17 @@ message WriteConfigReply {
   string backup_ref = 2;   // 本次写入前的快照引用
   string new_checksum = 3;
   string error = 4;
+}
+
+message DeleteConfigRequest {
+  string logical_path = 1;
+  string actor = 2;
+  bool auto_backup = 3;
+}
+message DeleteConfigReply {
+  bool ok = 1;
+  string backup_ref = 2;
+  string error = 3;
 }
 
 message TestConfigRequest {}

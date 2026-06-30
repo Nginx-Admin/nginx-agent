@@ -65,6 +65,7 @@ nginx-agent/
 | `ListConfigs` | 配置文件列表（含 size/mtime/checksum） |
 | `ReadConfig` | 读取指定逻辑路径内容 |
 | `WriteConfig` | 安全闭环写入（支持 `auto_backup`、`expected_checksum` 乐观锁） |
+| `DeleteConfig` | 安全闭环删除（快照 → 删除 → nginx -t → reload；默认禁止删主配置） |
 | `TestConfig` | 执行 `nginx -t` |
 | `Reload` | 执行 reload |
 | `ListBackups` | 列出本地快照（可按 `logical_path` 过滤） |

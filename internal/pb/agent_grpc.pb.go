@@ -25,6 +25,7 @@ const (
 	AgentService_ListConfigs_FullMethodName         = "/nginxadmin.v1.AgentService/ListConfigs"
 	AgentService_ReadConfig_FullMethodName          = "/nginxadmin.v1.AgentService/ReadConfig"
 	AgentService_WriteConfig_FullMethodName         = "/nginxadmin.v1.AgentService/WriteConfig"
+	AgentService_DeleteConfig_FullMethodName        = "/nginxadmin.v1.AgentService/DeleteConfig"
 	AgentService_TestConfig_FullMethodName          = "/nginxadmin.v1.AgentService/TestConfig"
 	AgentService_Reload_FullMethodName              = "/nginxadmin.v1.AgentService/Reload"
 	AgentService_ListBackups_FullMethodName         = "/nginxadmin.v1.AgentService/ListBackups"
@@ -47,6 +48,7 @@ type AgentServiceClient interface {
 	ListConfigs(ctx context.Context, in *ListConfigsRequest, opts ...grpc.CallOption) (*ListConfigsReply, error)
 	ReadConfig(ctx context.Context, in *ReadConfigRequest, opts ...grpc.CallOption) (*ReadConfigReply, error)
 	WriteConfig(ctx context.Context, in *WriteConfigRequest, opts ...grpc.CallOption) (*WriteConfigReply, error)
+	DeleteConfig(ctx context.Context, in *DeleteConfigRequest, opts ...grpc.CallOption) (*DeleteConfigReply, error)
 	// 校验与重载
 	TestConfig(ctx context.Context, in *TestConfigRequest, opts ...grpc.CallOption) (*TestConfigReply, error)
 	Reload(ctx context.Context, in *ReloadRequest, opts ...grpc.CallOption) (*ReloadReply, error)
@@ -120,6 +122,16 @@ func (c *agentServiceClient) WriteConfig(ctx context.Context, in *WriteConfigReq
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(WriteConfigReply)
 	err := c.cc.Invoke(ctx, AgentService_WriteConfig_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentServiceClient) DeleteConfig(ctx context.Context, in *DeleteConfigRequest, opts ...grpc.CallOption) (*DeleteConfigReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteConfigReply)
+	err := c.cc.Invoke(ctx, AgentService_DeleteConfig_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -200,6 +212,7 @@ type AgentServiceServer interface {
 	ListConfigs(context.Context, *ListConfigsRequest) (*ListConfigsReply, error)
 	ReadConfig(context.Context, *ReadConfigRequest) (*ReadConfigReply, error)
 	WriteConfig(context.Context, *WriteConfigRequest) (*WriteConfigReply, error)
+	DeleteConfig(context.Context, *DeleteConfigRequest) (*DeleteConfigReply, error)
 	// 校验与重载
 	TestConfig(context.Context, *TestConfigRequest) (*TestConfigReply, error)
 	Reload(context.Context, *ReloadRequest) (*ReloadReply, error)
@@ -236,6 +249,9 @@ func (UnimplementedAgentServiceServer) ReadConfig(context.Context, *ReadConfigRe
 }
 func (UnimplementedAgentServiceServer) WriteConfig(context.Context, *WriteConfigRequest) (*WriteConfigReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method WriteConfig not implemented")
+}
+func (UnimplementedAgentServiceServer) DeleteConfig(context.Context, *DeleteConfigRequest) (*DeleteConfigReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteConfig not implemented")
 }
 func (UnimplementedAgentServiceServer) TestConfig(context.Context, *TestConfigRequest) (*TestConfigReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method TestConfig not implemented")
@@ -384,6 +400,24 @@ func _AgentService_WriteConfig_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AgentService_DeleteConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServiceServer).DeleteConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentService_DeleteConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServiceServer).DeleteConfig(ctx, req.(*DeleteConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AgentService_TestConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TestConfigRequest)
 	if err := dec(in); err != nil {
@@ -522,6 +556,10 @@ var AgentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WriteConfig",
 			Handler:    _AgentService_WriteConfig_Handler,
+		},
+		{
+			MethodName: "DeleteConfig",
+			Handler:    _AgentService_DeleteConfig_Handler,
 		},
 		{
 			MethodName: "TestConfig",

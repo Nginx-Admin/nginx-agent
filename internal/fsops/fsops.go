@@ -127,6 +127,24 @@ func (f *FsOps) Write(logicalPath string, content []byte, expectedChecksum strin
 	return Checksum(content), nil
 }
 
+// Delete 删除逻辑路径对应文件（禁止删除主配置，除非 allow_main_config）。
+func (f *FsOps) Delete(logicalPath string) error {
+	abs, err := f.resolve(logicalPath)
+	if err != nil {
+		return err
+	}
+	if f.isMainConfig(abs) && !f.cfg.AllowMainConfig {
+		return fmt.Errorf("默认禁止删除主配置 %s", abs)
+	}
+	if err := os.Remove(abs); err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("文件不存在: %s", logicalPath)
+		}
+		return fmt.Errorf("删除 %s 失败: %w", logicalPath, err)
+	}
+	return nil
+}
+
 // Resolve 暴露给同包其他模块（如 snapshot）使用的安全解析。
 func (f *FsOps) Resolve(logicalPath string) (string, error) {
 	return f.resolve(logicalPath)

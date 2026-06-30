@@ -145,6 +145,46 @@ func (s *AgentServer) WriteConfig(ctx context.Context, req *pb.WriteConfigReques
 	return &pb.WriteConfigReply{Ok: true, BackupRef: backupRef, NewChecksum: newChecksum}, nil
 }
 
+// DeleteConfig 安全闭环：快照 → 删除 → nginx -t → reload；失败则恢复快照。
+func (s *AgentServer) DeleteConfig(ctx context.Context, req *pb.DeleteConfigRequest) (*pb.DeleteConfigReply, error) {
+	logical := req.GetLogicalPath()
+
+	var backupRef string
+	if req.GetAutoBackup() {
+		note := fmt.Sprintf("delete 前自动备份 by %s", req.GetActor())
+		meta, err := s.snap.Create(logical, note)
+		if err != nil {
+			return &pb.DeleteConfigReply{Ok: false, Error: "备份失败: " + err.Error()}, nil
+		}
+		backupRef = meta.BackupRef
+	}
+
+	if err := s.fs.Delete(logical); err != nil {
+		return &pb.DeleteConfigReply{Ok: false, BackupRef: backupRef, Error: err.Error()}, nil
+	}
+
+	test, _ := s.nx.Test(ctx)
+	if !test.OK {
+		s.restore(backupRef, logical)
+		return &pb.DeleteConfigReply{
+			Ok: false, BackupRef: backupRef,
+			Error: "nginx -t 校验失败，已恢复文件:\n" + test.Output,
+		}, nil
+	}
+
+	reload, _ := s.nx.Reload(ctx)
+	if !reload.OK {
+		s.restore(backupRef, logical)
+		s.nx.Reload(ctx)
+		return &pb.DeleteConfigReply{
+			Ok: false, BackupRef: backupRef,
+			Error: "reload 失败，已恢复文件:\n" + reload.Output,
+		}, nil
+	}
+
+	return &pb.DeleteConfigReply{Ok: true, BackupRef: backupRef}, nil
+}
+
 // restore 用快照内容覆盖回目标文件（用于回滚）。backupRef 为空表示原本是新建文件，直接删除。
 func (s *AgentServer) restore(backupRef, logical string) {
 	if backupRef == "" {
